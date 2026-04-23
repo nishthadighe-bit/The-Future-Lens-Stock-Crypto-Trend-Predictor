@@ -1,79 +1,53 @@
 import streamlit as st
-import yfinance as yf
-import pandas as pd
-import numpy as np
-from sklearn.linear_model import LinearRegression
-import datetime
-from PIL import Image
 
-# --- PAGE CONFIG ---
-st.set_page_config(page_title="Nishtha's DS Portfolio", page_icon="📊", layout="wide")
+# --- 1. THE "SAFEGUARD" CHECK ---
+try:
+    import yfinance as yf
+    import pandas as pd
+    import numpy as np
+    from sklearn.linear_model import LinearRegression
+    from PIL import Image
+    import datetime
+except ImportError:
+    st.error("🚀 **Hold on!** You haven't added the `requirements.txt` file to GitHub yet.")
+    st.info("Create a file named `requirements.txt` on GitHub and add: `streamlit`, `yfinance`, `pandas`, `numpy`, `scikit-learn`, and `Pillow`.")
+    st.stop()
 
-# --- SIDEBAR NAVIGATION ---
-st.sidebar.title("🚀 Project Hub")
-app_mode = st.sidebar.selectbox("Choose a Project:", 
-                                ["Future-Lens (Trend Predictor)", "Scholar Bio-Sync (Performance)"])
+# --- 2. APP CONFIG ---
+st.set_page_config(page_title="Nishtha's DS Hub", page_icon="📊")
+
+st.sidebar.title("🛠️ Project Selector")
+choice = st.sidebar.radio("Go to:", ["Trend Predictor", "Scholar Bio-Sync"])
 
 # --- PROJECT 1: FUTURE-LENS ---
-if app_mode == "Future-Lens (Trend Predictor)":
-    st.title("📈 Future-Lens: AI Trend Predictor")
-    st.write("### Real-time Market Analysis")
+if choice == "Trend Predictor":
+    st.title("📈 Future-Lens Trend Predictor")
+    ticker = st.text_input("Enter Ticker (e.g., BTC-USD, RELIANCE.NS)", "BTC-USD")
     
-    ticker = st.text_input("Enter Ticker (e.g., BTC-USD, NVDA, RELIANCE.NS)", "BTC-USD")
-    days = st.slider("Forecast Days", 1, 30, 7)
-
-    if st.button("Analyze Trend"):
-        try:
-            data = yf.download(ticker, start="2024-01-01", progress=False)
-            if not data.empty:
-                # Prediction Logic
-                df = data[['Close']].reset_index()
-                df['Date_Ordinal'] = df['Date'].apply(lambda x: x.toordinal())
-                X = df[['Date_Ordinal']].values
-                y = df['Close'].values
-                
-                model = LinearRegression().fit(X, y)
-                last_date = df['Date_Ordinal'].max()
-                future_dates = np.array([last_date + i for i in range(1, days + 1)]).reshape(-1, 1)
-                preds = model.predict(future_dates)
-
-                # Visuals
-                st.line_chart(data['Close'])
-                
-                c1, c2 = st.columns(2)
-                c1.metric("Current Price", f"${float(y[-1]):.2f}")
-                c2.metric("Predicted Price", f"${float(preds[-1]):.2f}", 
-                          delta=f"{float(preds[-1]-y[-1]):.2f}")
-            else:
-                st.error("Invalid Ticker. Please check the symbol.")
-        except Exception as e:
-            st.error(f"Data Fetch Error: {e}")
+    if st.button("Predict"):
+        data = yf.download(ticker, start="2024-01-01", progress=False)
+        if not data.empty:
+            st.line_chart(data['Close'])
+            # Simple Regression
+            df = data[['Close']].reset_index()
+            df['Ordinal'] = df['Date'].map(datetime.date.toordinal)
+            model = LinearRegression().fit(df[['Ordinal']].values, df['Close'].values)
+            st.success(f"Model trained! Current Trend: {'📈 Upward' if model.coef_[0] > 0 else '📉 Downward'}")
+        else:
+            st.error("Ticker not found.")
 
 # --- PROJECT 2: SCHOLAR BIO-SYNC ---
-elif app_mode == "Scholar Bio-Sync (Performance)":
+else:
     st.title("🎓 Scholar Bio-Sync")
-    st.write("### Optimization for the 9.28 SGPI Hustle")
+    st.write("Manage that 9.28 SGPI & Kalyan commute.")
+    sleep = st.slider("Sleep", 0, 12, 7)
+    commute = st.slider("Commute Stress", 1, 10, 5)
     
-    col1, col2 = st.columns(2)
-    with col1:
-        sleep = st.slider("Sleep Hours", 0.0, 12.0, 6.0)
-        commute = st.slider("Commute Fatigue (1-10)", 1, 10, 5)
-    with col2:
-        load = st.number_input("Assignments Pending", 0, 10, 2)
-    
-    if st.button("Predict Focus"):
-        # Logic: Weighted factors based on student lifestyle
-        score = int(np.clip((sleep * 10) - (commute * 4) - (load * 5) + 30, 0, 100))
-        st.metric("Focus Capacity", f"{score}%")
-        st.progress(score / 100)
-        
-        if score > 70:
-            st.success("🔥 High performance mode! Best time for Data Science assignments.")
-        else:
-            st.warning("😴 High burnout risk. Prioritize rest for the Kalyan commute.")
+    score = (sleep * 10) - (commute * 5) + 20
+    st.metric("Focus Potential", f"{max(0, min(100, score))}%")
 
-st.sidebar.markdown("---")
-st.sidebar.info("Built by Nishtha Dighe | 2nd Year Data Science Student")
+       
+    
 
 
 
