@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
 import datetime
+from PIL import Image
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Nishtha's DS Portfolio", page_icon="📊", layout="wide")
@@ -18,7 +19,7 @@ if app_mode == "Future-Lens (Trend Predictor)":
     st.title("📈 Future-Lens: AI Trend Predictor")
     st.write("### Real-time Market Analysis")
     
-    ticker = st.text_input("Enter Ticker (e.g., BTC-USD, GOOGL, RELIANCE.NS)", "BTC-USD")
+    ticker = st.text_input("Enter Ticker (e.g., BTC-USD, NVDA, RELIANCE.NS)", "BTC-USD")
     days = st.slider("Forecast Days", 1, 30, 7)
 
     if st.button("Analyze Trend"):
@@ -27,7 +28,7 @@ if app_mode == "Future-Lens (Trend Predictor)":
             if not data.empty:
                 # Prediction Logic
                 df = data[['Close']].reset_index()
-                df['Date_Ordinal'] = df['Date'].map(datetime.date.toordinal)
+                df['Date_Ordinal'] = df['Date'].apply(lambda x: x.toordinal())
                 X = df[['Date_Ordinal']].values
                 y = df['Close'].values
                 
@@ -40,13 +41,13 @@ if app_mode == "Future-Lens (Trend Predictor)":
                 st.line_chart(data['Close'])
                 
                 c1, c2 = st.columns(2)
-                c1.metric("Current Price", f"${y[-1]:.2f}")
-                c2.metric("Predicted Price", f"${preds[-1]:.2f}", 
-                          delta=f"{preds[-1]-y[-1]:.2f}")
+                c1.metric("Current Price", f"${float(y[-1]):.2f}")
+                c2.metric("Predicted Price", f"${float(preds[-1]):.2f}", 
+                          delta=f"{float(preds[-1]-y[-1]):.2f}")
             else:
-                st.error("Invalid Ticker.")
+                st.error("Invalid Ticker. Please check the symbol.")
         except Exception as e:
-            st.error(f"Error: {e}")
+            st.error(f"Data Fetch Error: {e}")
 
 # --- PROJECT 2: SCHOLAR BIO-SYNC ---
 elif app_mode == "Scholar Bio-Sync (Performance)":
@@ -61,16 +62,20 @@ elif app_mode == "Scholar Bio-Sync (Performance)":
         load = st.number_input("Assignments Pending", 0, 10, 2)
     
     if st.button("Predict Focus"):
+        # Logic: Weighted factors based on student lifestyle
         score = int(np.clip((sleep * 10) - (commute * 4) - (load * 5) + 30, 0, 100))
         st.metric("Focus Capacity", f"{score}%")
         st.progress(score / 100)
         
         if score > 70:
-            st.success("🔥 High performance mode! Focus on ML assignments.")
+            st.success("🔥 High performance mode! Best time for Data Science assignments.")
         else:
-            st.warning("😴 High burnout risk. Rest for the Kalyan commute.")
+            st.warning("😴 High burnout risk. Prioritize rest for the Kalyan commute.")
 
 st.sidebar.markdown("---")
-st.sidebar.info("Built by Nishtha Dighe | 2nd Year Data Science")
+st.sidebar.info("Built by Nishtha Dighe | 2nd Year Data Science Student")
+
+
+
 
         
