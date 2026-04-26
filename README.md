@@ -24,4 +24,5 @@ yfinance: For robust, real-time financial data sourcing.
 
 Scikit-Learn: For predictive trend modeling.
 
-Matplotlib & Streamlit: For creating clear, interactive data narratives and dashboards.
+Matplotlib & Streamlit: For creating clear, interactive data narratives and dashboards. It's very useful.
+
